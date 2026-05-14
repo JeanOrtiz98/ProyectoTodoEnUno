@@ -1,0 +1,22 @@
+# Node
+node_modules/
+
+# Build
+dist/
+build/
+
+# IntelliJ
+.idea/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Java
+target/
+
+# Env
+.env

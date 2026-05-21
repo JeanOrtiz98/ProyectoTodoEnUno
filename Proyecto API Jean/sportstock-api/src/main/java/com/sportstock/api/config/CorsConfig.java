@@ -1,50 +1,37 @@
 package com.sportstock.api.config;
 
-// ==============================
-// IMPORTACIONES
-// ==============================
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.*;
+import org.springframework.web.filter.CorsFilter;
 
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-// ==============================
-// CONFIGURACIÓN CORS
-// Permite conexión con React
-// ==============================
+import java.util.List;
 
 @Configuration
 public class CorsConfig {
 
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
+    public CorsFilter corsFilter() {
 
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
+        CorsConfiguration config = new CorsConfiguration();
 
-                registry.addMapping("/**")
+        config.setAllowCredentials(true);
 
-                        // Frontend React/Vite
+        config.setAllowedOrigins(
+                List.of("http://localhost:5173")
+        );
 
-                        .allowedOrigins("http://localhost:5173")
+        config.setAllowedHeaders(List.of("*"));
 
-                        // Métodos permitidos
+        config.setAllowedMethods(
+                List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
+        );
 
-                        .allowedMethods(
-                                "GET",
-                                "POST",
-                                "PUT",
-                                "DELETE"
-                        )
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
 
-                        // Permitir cualquier header
+        source.registerCorsConfiguration("/**", config);
 
-
-                        .allowedHeaders("*");
-            }
-        };
+        return new CorsFilter(source);
     }
 }

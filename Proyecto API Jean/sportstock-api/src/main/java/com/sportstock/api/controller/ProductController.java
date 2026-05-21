@@ -6,9 +6,7 @@ package com.sportstock.api.controller;
 
 import com.sportstock.api.model.Product;
 import com.sportstock.api.service.ProductService;
-
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 // ==============================
@@ -17,9 +15,7 @@ import java.util.List;
 // ==============================
 
 @RestController
-
 @RequestMapping("/api/products")
-
 public class ProductController {
 
     // ==============================
@@ -43,7 +39,6 @@ public class ProductController {
 
     @GetMapping
     public List<Product> getAllProducts() {
-
         return productService.getAllProducts();
     }
 
@@ -57,7 +52,6 @@ public class ProductController {
 
         return productService.getProductById(id);
     }
-
     // ==============================
     // CREAR PRODUCTO
     // POST /api/products

@@ -1,29 +1,7 @@
-// ==============================
-// URL BASE DE LA API
-// ==============================
-
 const API_URL = "http://localhost:8080/api/products";
 
-// ==============================
-// INTERFAZ PRODUCT
-// ==============================
-
-export interface Product {
-    id?: number;
-    name: string;
-    description: string;
-    category: string;
-    quantity: number;
-    price: number;
-    status: 'disponible' | 'bajo stock' | 'agotado';
-}
-
-// ==============================
-// OBTENER PRODUCTOS
-// ==============================
-
-export const getProducts = async (): Promise<Product[]> => {
-
+// Obtener todos los productos
+export const getProducts = async () => {
     const response = await fetch(API_URL);
 
     if (!response.ok) {
@@ -33,20 +11,13 @@ export const getProducts = async (): Promise<Product[]> => {
     return response.json();
 };
 
-// ==============================
-// CREAR PRODUCTO
-// ==============================
-
-export const createProduct = async (product: Product) => {
-
+// Crear producto
+export const createProduct = async (product: any) => {
     const response = await fetch(API_URL, {
-
         method: "POST",
-
         headers: {
             "Content-Type": "application/json",
         },
-
         body: JSON.stringify(product),
     });
 
@@ -57,12 +28,25 @@ export const createProduct = async (product: Product) => {
     return response.json();
 };
 
-// ==============================
-// ELIMINAR PRODUCTO
-// ==============================
+// Actualizar producto
+export const updateProduct = async (id: number, product: any) => {
+    const response = await fetch(`${API_URL}/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(product),
+    });
 
-export const deleteProductApi = async (id: string) => {
+    if (!response.ok) {
+        throw new Error("Error al actualizar producto");
+    }
 
+    return response.json();
+};
+
+// Eliminar producto
+export const deleteProduct = async (id: number) => {
     const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
     });

@@ -21,7 +21,7 @@ export function ProductDetailPage() {
   const navigate = useNavigate();
   const { getProduct } = useInventory();
 
-  const product = id ? getProduct(id) : undefined;
+  const product = id ? getProduct(Number(id)) : undefined;
 
   if (!product) {
     return (

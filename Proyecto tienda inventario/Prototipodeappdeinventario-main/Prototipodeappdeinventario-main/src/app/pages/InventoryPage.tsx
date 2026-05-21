@@ -231,6 +231,7 @@ export function InventoryPage() {
                           <Button
                             variant="ghost"
                             size="sm"
+
                             className="gap-1 text-destructive hover:text-destructive"
                             onClick={() => setDeleteId(product.id)}
                           >

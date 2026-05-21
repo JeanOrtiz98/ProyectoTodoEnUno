@@ -47,7 +47,7 @@ export function ProductFormPage() {
 
   useEffect(() => {
     if (isEditMode && id) {
-      const product = getProduct(id);
+      const product = getProduct(Number(id));
       if (product) {
         setFormData({
           name: product.name,
@@ -99,7 +99,7 @@ export function ProductFormPage() {
     }
 
     if (isEditMode && id) {
-      updateProduct(id, formData);
+      updateProduct(Number(id), formData);
       toast.success('Producto actualizado correctamente');
     } else {
       addProduct(formData);

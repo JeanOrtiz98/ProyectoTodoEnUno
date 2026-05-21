@@ -7,12 +7,13 @@ import { useEffect } from 'react';
 import {
   getProducts,
   createProduct,
-  deleteProductApi
+  updateProduct as updateProductApi,
+  deleteProduct
 } from '../services/productService';
 import React, { createContext, useContext, useState } from 'react';
 
 export interface Product {
-  id: string;
+  id: number;
   name: string;
   category: string;
   description: string;
@@ -24,7 +25,7 @@ export interface Product {
 }
 
 export interface Movement {
-  id: string;
+  id: number;
   type: 'entrada' | 'salida';
   quantity: number;
   date: string;
@@ -33,7 +34,7 @@ export interface Movement {
 }
 
 export interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
   role: 'admin' | 'empleado';
@@ -43,13 +44,29 @@ export interface User {
 interface InventoryContextType {
   products: Product[];
   users: User[];
-  addProduct: (product: Omit<Product, 'id' | 'status' | 'movements'>) => void;
-  updateProduct: (id: string, product: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
-  getProduct: (id: string) => Product | undefined;
-  addUser: (user: Omit<User, 'id' | 'createdAt'>) => void;
-  updateUser: (id: string, user: Partial<User>) => void;
-  deleteUser: (id: string) => void;
+  addProduct: (
+      product: Omit<Product, 'id' | 'status' | 'movements'>
+  ) => void;
+  updateProduct: (
+      id: number,
+      product: Partial<Product>
+  ) => void;
+  deleteProduct: (
+      id: number
+  ) => void;
+  getProduct: (
+      id: number
+  ) => Product | undefined;
+  addUser: (
+      user: Omit<User, 'id' | 'createdAt'>
+  ) => void;
+  updateUser: (
+      id: number,
+      user: Partial<User>
+  ) => void;
+  deleteUser: (
+      id: number
+  ) => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -57,7 +74,7 @@ const InventoryContext = createContext<InventoryContextType | undefined>(undefin
 // Datos iniciales mock
 const initialProducts: Product[] = [
   {
-    id: '1',
+    id: 1,
     name: 'Balón de Fútbol Nike',
     category: 'Fútbol',
     description: 'Balón oficial de competición',
@@ -65,12 +82,12 @@ const initialProducts: Product[] = [
     price: 29.99,
     status: 'disponible',
     movements: [
-      { id: '1', type: 'entrada', quantity: 50, date: '2026-03-10', user: 'admin', notes: 'Pedido inicial' },
-      { id: '2', type: 'salida', quantity: 5, date: '2026-03-15', user: 'empleado', notes: 'Venta local' },
+      { id: 1, type: 'entrada', quantity: 50, date: '2026-03-10', user: 'admin', notes: 'Pedido inicial' },
+      { id: 2, type: 'salida', quantity: 5, date: '2026-03-15', user: 'empleado', notes: 'Venta local' },
     ]
   },
   {
-    id: '2',
+    id: 2,
     name: 'Raqueta de Tenis Wilson',
     category: 'Tenis',
     description: 'Raqueta profesional de grafito',
@@ -78,12 +95,12 @@ const initialProducts: Product[] = [
     price: 149.99,
     status: 'bajo stock',
     movements: [
-      { id: '3', type: 'entrada', quantity: 20, date: '2026-02-20', user: 'admin' },
-      { id: '4', type: 'salida', quantity: 12, date: '2026-03-12', user: 'empleado' },
+      { id: 3, type: 'entrada', quantity: 20, date: '2026-02-20', user: 'admin' },
+      { id: 4, type: 'salida', quantity: 12, date: '2026-03-12', user: 'empleado' },
     ]
   },
   {
-    id: '3',
+    id: 3,
     name: 'Zapatillas Running Adidas',
     category: 'Running',
     description: 'Zapatillas con tecnología Boost',
@@ -92,7 +109,7 @@ const initialProducts: Product[] = [
     status: 'disponible',
   },
   {
-    id: '4',
+    id: 4,
     name: 'Pelota de Básquetbol Spalding',
     category: 'Básquetbol',
     description: 'Pelota oficial NBA',
@@ -101,7 +118,7 @@ const initialProducts: Product[] = [
     status: 'agotado',
   },
   {
-    id: '5',
+    id: 5,
     name: 'Guantes de Boxeo Everlast',
     category: 'Boxeo',
     description: 'Guantes profesionales 12 oz',
@@ -110,7 +127,7 @@ const initialProducts: Product[] = [
     status: 'disponible',
   },
   {
-    id: '6',
+    id: 6,
     name: 'Bicicleta de Montaña Trek',
     category: 'Ciclismo',
     description: 'Mountain bike profesional',
@@ -122,21 +139,21 @@ const initialProducts: Product[] = [
 
 const initialUsers: User[] = [
   {
-    id: '1',
+    id: 1,
     username: 'admin',
     email: 'admin@deportes.com',
     role: 'admin',
     createdAt: '2026-01-15',
   },
   {
-    id: '2',
+    id: 2,
     username: 'empleado',
     email: 'empleado@deportes.com',
     role: 'empleado',
     createdAt: '2026-02-01',
   },
   {
-    id: '3',
+    id: 3,
     username: 'carlos.gomez',
     email: 'carlos@deportes.com',
     role: 'empleado',
@@ -209,41 +226,53 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 // ACTUALIZAR PRODUCTO
 // ==============================
 
-  const updateProduct = (
-      id: string,
+  const updateProduct = async (
+      id: number,
       productUpdate: Partial<Product>
   ) => {
 
-    setProducts(products.map(p => {
+    try {
 
-      if (p.id === id) {
+      const existingProduct = products.find(p => p.id === id);
 
-        const updated = { ...p, ...productUpdate };
+      if (!existingProduct) return;
 
-        if (productUpdate.quantity !== undefined) {
+      const updatedProduct = {
+        ...existingProduct,
+        ...productUpdate,
+      };
 
-          updated.status =
-              updated.quantity === 0
-                  ? 'agotado'
-                  : updated.quantity < 10
-                      ? 'bajo stock'
-                      : 'disponible';
-        }
-        return updated;
-      }
-      return p;
-    }));
+      updatedProduct.status =
+          updatedProduct.quantity === 0
+              ? 'agotado'
+              : updatedProduct.quantity < 10
+                  ? 'bajo stock'
+                  : 'disponible';
+
+      const result = await updateProductApi(
+          Number(id),
+          updatedProduct
+      );
+
+      setProducts(products.map(p =>
+          p.id === id ? result : p
+      ));
+
+    } catch (error) {
+
+      console.error("Error actualizando producto:", error);
+    }
   };
 
 // ==============================
 // ELIMINAR PRODUCTO
 // ==============================
 
-  const deleteProduct = async (id: string) => {
+  const deleteProduct = async (id: number) => {
 
     try {
 
-      await deleteProductApi(id);
+      await deleteProduct(id);
 
       setProducts(products.filter(p => p.id !== id));
 
@@ -257,24 +286,24 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 // OBTENER PRODUCTO POR ID
 // ==============================
 
-  const getProduct = (id: string) => {
+  const getProduct = (id: number) => {
     return products.find(p => p.id === id);
   };
 
   const addUser = (user: Omit<User, 'id' | 'createdAt'>) => {
     const newUser: User = {
       ...user,
-      id: Date.now().toString(),
+      id: Date.now(),
       createdAt: new Date().toISOString().split('T')[0],
     };
     setUsers([...users, newUser]);
   };
 
-  const updateUser = (id: string, userUpdate: Partial<User>) => {
+  const updateUser = (id: number, userUpdate: Partial<User>) => {
     setUsers(users.map(u => (u.id === id ? { ...u, ...userUpdate } : u)));
   };
 
-  const deleteUser = (id: string) => {
+  const deleteUser = (id: number) => {
     setUsers(users.filter(u => u.id !== id));
   };
 

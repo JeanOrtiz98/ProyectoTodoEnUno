@@ -41,20 +41,24 @@ export function UsersPage() {
   const { user: currentUser } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     username: '',
     email: '',
+    password: '',
+    confirmPassword: '',
     role: 'empleado' as 'admin' | 'empleado',
   });
-
   const resetForm = () => {
-    setFormData({
-      username: '',
-      email: '',
-      role: 'empleado',
-    });
+  setFormData({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'empleado',
+  });
+
     setEditingUser(null);
   };
 
@@ -64,6 +68,8 @@ export function UsersPage() {
       setFormData({
         username: user.username,
         email: user.email,
+        password: '',
+        confirmPassword: '',
         role: user.role,
       });
     } else {
@@ -77,39 +83,45 @@ export function UsersPage() {
     resetForm();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
 
-    if (!formData.username.trim() || !formData.email.trim()) {
-      toast.error('Por favor, completa todos los campos');
-      return;
-    }
+  if (!formData.username.trim() || !formData.email.trim()) {
+    toast.error('Por favor, completa todos los campos');
+    return;
+  }
 
-    if (editingUser) {
-      updateUser(editingUser.id, formData);
-      toast.success('Usuario actualizado correctamente');
-    } else {
-      addUser(formData);
-      toast.success('Usuario creado correctamente');
-    }
+  if (formData.password !== formData.confirmPassword) {
+    toast.error('Las contraseñas no coinciden');
+    return;
+  }
 
-    handleCloseDialog();
-  };
+  if (editingUser) {
+    updateUser(editingUser.id, formData);
+    toast.success('Usuario actualizado correctamente');
+  } else {
+    addUser(formData);
+    toast.success('Usuario creado correctamente');
+  }
 
+  handleCloseDialog();
+};
   const handleDelete = () => {
     if (deleteId) {
-      // Prevenir que el usuario se elimine a sí mismo
+
       if (deleteId === currentUser?.id) {
         toast.error('No puedes eliminar tu propio usuario');
         setDeleteId(null);
         return;
       }
+
       deleteUser(deleteId);
+
       toast.success('Usuario eliminado correctamente');
+
       setDeleteId(null);
     }
   };
-
   // Solo admins pueden gestionar usuarios
   const canManageUsers = currentUser?.role === 'admin';
 
@@ -296,6 +308,47 @@ export function UsersPage() {
                   placeholder="Ej: juan@deportes.com"
                 />
               </div>
+              {canManageUsers && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">
+                        {editingUser ? 'Nueva Contraseña' : 'Contraseña'}
+                      </Label>
+
+                      <Input
+                          id="password"
+                          type="password"
+                          value={formData.password}
+                          onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                password: e.target.value
+                              })
+                          }
+                          placeholder="********"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">
+                        Confirmar Contraseña
+                      </Label>
+
+                      <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={formData.confirmPassword}
+                          onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                confirmPassword: e.target.value
+                              })
+                          }
+                          placeholder="********"
+                      />
+                    </div>
+                  </>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="role">Rol</Label>
                 <Select

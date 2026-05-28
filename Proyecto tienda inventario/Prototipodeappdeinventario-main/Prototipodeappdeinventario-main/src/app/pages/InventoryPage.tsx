@@ -30,7 +30,7 @@ export function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   // Obtener categorías únicas
   const categories = Array.from(new Set(products.map(p => p.category)));

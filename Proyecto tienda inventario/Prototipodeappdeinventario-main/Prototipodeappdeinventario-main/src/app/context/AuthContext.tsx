@@ -1,14 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
-  id: string;
+  id: number;
   username: string;
   role: 'admin' | 'empleado';
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => boolean;
+  login: (
+      username: string,
+      password: string
+  ) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -26,20 +29,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const login = (username: string, password: string) => {
-    // Simulación de autenticación - En producción, esto se conectaría a Supabase
-    if (username === 'admin' && password === 'admin123') {
-      const adminUser = { id: '1', username: 'admin', role: 'admin' as const };
-      setUser(adminUser);
-      localStorage.setItem('user', JSON.stringify(adminUser));
-      return true;
-    } else if (username === 'empleado' && password === 'empleado123') {
-      const empleadoUser = { id: '2', username: 'empleado', role: 'empleado' as const };
-      setUser(empleadoUser);
-      localStorage.setItem('user', JSON.stringify(empleadoUser));
-      return true;
+  const login = async (
+      username: string,
+      password: string
+  ): Promise<boolean> => {
+
+    try {
+
+      const response = await fetch(
+          'http://localhost:8080/api/users'
+      );
+
+      const users = await response.json();
+
+      const foundUser = users.find(
+          (u: any) =>
+              u.username === username &&
+              u.password === password
+      );
+
+      if (foundUser) {
+
+        const loggedUser = {
+          id: foundUser.id,
+          username: foundUser.username,
+          role: foundUser.role,
+        };
+
+        setUser(loggedUser);
+
+        localStorage.setItem(
+            'user',
+            JSON.stringify(loggedUser)
+        );
+
+        return true;
+      }
+
+      return false;
+
+    } catch (error) {
+
+      console.error('Error en login:', error);
+
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
@@ -48,9 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+        {children}
+      </AuthContext.Provider>
   );
 }
 

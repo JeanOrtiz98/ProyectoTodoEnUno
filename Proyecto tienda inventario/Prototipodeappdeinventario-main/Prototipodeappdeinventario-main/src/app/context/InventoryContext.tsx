@@ -8,9 +8,16 @@ import {
   getProducts,
   createProduct,
   updateProduct as updateProductApi,
-  deleteProduct
+  deleteProduct as deleteProductApi
 } from '../services/productService';
 import React, { createContext, useContext, useState } from 'react';
+
+import {
+  getUsers,
+  createUser as createUserApi,
+  updateUserApi,
+  deleteUserApi
+} from '../services/userService';
 
 export interface Product {
   id: number;
@@ -37,6 +44,7 @@ export interface User {
   id: number;
   username: string;
   email: string;
+  password?: string;
   role: 'admin' | 'empleado';
   createdAt: string;
 }
@@ -44,6 +52,7 @@ export interface User {
 interface InventoryContextType {
   products: Product[];
   users: User[];
+  currentUser: User;
   addProduct: (
       product: Omit<Product, 'id' | 'status' | 'movements'>
   ) => void;
@@ -71,100 +80,21 @@ interface InventoryContextType {
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
 
-// Datos iniciales mock
-const initialProducts: Product[] = [
-  {
-    id: 1,
-    name: 'Balón de Fútbol Nike',
-    category: 'Fútbol',
-    description: 'Balón oficial de competición',
-    quantity: 45,
-    price: 29.99,
-    status: 'disponible',
-    movements: [
-      { id: 1, type: 'entrada', quantity: 50, date: '2026-03-10', user: 'admin', notes: 'Pedido inicial' },
-      { id: 2, type: 'salida', quantity: 5, date: '2026-03-15', user: 'empleado', notes: 'Venta local' },
-    ]
-  },
-  {
-    id: 2,
-    name: 'Raqueta de Tenis Wilson',
-    category: 'Tenis',
-    description: 'Raqueta profesional de grafito',
-    quantity: 8,
-    price: 149.99,
-    status: 'bajo stock',
-    movements: [
-      { id: 3, type: 'entrada', quantity: 20, date: '2026-02-20', user: 'admin' },
-      { id: 4, type: 'salida', quantity: 12, date: '2026-03-12', user: 'empleado' },
-    ]
-  },
-  {
-    id: 3,
-    name: 'Zapatillas Running Adidas',
-    category: 'Running',
-    description: 'Zapatillas con tecnología Boost',
-    quantity: 32,
-    price: 119.99,
-    status: 'disponible',
-  },
-  {
-    id: 4,
-    name: 'Pelota de Básquetbol Spalding',
-    category: 'Básquetbol',
-    description: 'Pelota oficial NBA',
-    quantity: 0,
-    price: 49.99,
-    status: 'agotado',
-  },
-  {
-    id: 5,
-    name: 'Guantes de Boxeo Everlast',
-    category: 'Boxeo',
-    description: 'Guantes profesionales 12 oz',
-    quantity: 15,
-    price: 79.99,
-    status: 'disponible',
-  },
-  {
-    id: 6,
-    name: 'Bicicleta de Montaña Trek',
-    category: 'Ciclismo',
-    description: 'Mountain bike profesional',
-    quantity: 5,
-    price: 899.99,
-    status: 'bajo stock',
-  },
-];
+export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
-const initialUsers: User[] = [
-  {
+  // ==============================
+  // ESTADO DE PRODUCTOS
+  // ==============================
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [currentUser] = useState<User>({
     id: 1,
     username: 'admin',
     email: 'admin@deportes.com',
     role: 'admin',
-    createdAt: '2026-01-15',
-  },
-  {
-    id: 2,
-    username: 'empleado',
-    email: 'empleado@deportes.com',
-    role: 'empleado',
-    createdAt: '2026-02-01',
-  },
-  {
-    id: 3,
-    username: 'carlos.gomez',
-    email: 'carlos@deportes.com',
-    role: 'empleado',
-    createdAt: '2026-02-10',
-  },
-];
-
-export function InventoryProvider({ children }: { children: React.ReactNode }) {
-  // ESTADO DE PRODUCTOS
-  const [products, setProducts] = useState<Product[]>([]);
-  const [users, setUsers] = useState<User[]>(initialUsers);
+    createdAt: '2026-01-01',
+  });
 
 // ==============================
 // CARGAR PRODUCTOS DESDE API
@@ -173,6 +103,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
 
     loadProducts();
+    loadUsers();
 
   }, []);
 
@@ -181,16 +112,23 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 // ==============================
 
   const loadProducts = async () => {
-
     try {
-
       const data = await getProducts();
-
       setProducts(data);
-
     } catch (error) {
-
       console.error("Error cargando productos:", error);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const data = await getUsers();
+      setUsers(data);
+    } catch (error) {
+      console.error(
+          "Error cargando usuarios:",
+          error
+      );
     }
   };
 
@@ -219,6 +157,20 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
 
       console.error("Error creando producto:", error);
+    }
+  };
+
+  const addUser = async (
+      user: Omit<User, 'id' | 'createdAt'>
+  ) => {
+    try {
+      const newUser = await createUserApi(user);
+      setUsers([...users, newUser]);
+    } catch (error) {
+      console.error(
+          "Error creando usuario:",
+          error
+      );
     }
   };
 
@@ -264,24 +216,64 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUser = async (
+      id: number,
+      userUpdate: Partial<User>
+  ) => {
+    try {
+      const existingUser = users.find(
+          u => u.id === id
+      );
+      if (!existingUser) return;
+      const updatedUser = {
+        ...existingUser,
+        ...userUpdate,
+      };
+      const result = await updateUserApi(
+          id,
+          updatedUser
+      );
+      setUsers(
+          users.map(u =>
+              u.id === id ? result : u
+          )
+      );
+    } catch (error) {
+      console.error(
+          "Error actualizando usuario:",
+          error
+      );
+    }
+  };
+
 // ==============================
 // ELIMINAR PRODUCTO
 // ==============================
 
   const deleteProduct = async (id: number) => {
-
     try {
-
-      await deleteProduct(id);
-
+      await deleteProductApi(id);
       setProducts(products.filter(p => p.id !== id));
-
     } catch (error) {
-
       console.error("Error eliminando producto:", error);
     }
   };
 
+  const deleteUser = async (
+      id: number
+  ) => {
+    try {
+      await deleteUserApi(id);
+      setUsers(
+          users.filter(u => u.id !== id)
+      );
+    } catch (error) {
+      console.error(
+          "Error eliminando usuario:",
+          error
+      );
+    }
+  };
 // ==============================
 // OBTENER PRODUCTO POR ID
 // ==============================
@@ -290,36 +282,20 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     return products.find(p => p.id === id);
   };
 
-  const addUser = (user: Omit<User, 'id' | 'createdAt'>) => {
-    const newUser: User = {
-      ...user,
-      id: Date.now(),
-      createdAt: new Date().toISOString().split('T')[0],
-    };
-    setUsers([...users, newUser]);
-  };
-
-  const updateUser = (id: number, userUpdate: Partial<User>) => {
-    setUsers(users.map(u => (u.id === id ? { ...u, ...userUpdate } : u)));
-  };
-
-  const deleteUser = (id: number) => {
-    setUsers(users.filter(u => u.id !== id));
-  };
-
   return (
     <InventoryContext.Provider
-      value={{
-        products,
-        users,
-        addProduct,
-        updateProduct,
-        deleteProduct,
-        getProduct,
-        addUser,
-        updateUser,
-        deleteUser,
-      }}
+        value={{
+          products,
+          users,
+          currentUser,
+          addProduct,
+          updateProduct,
+          deleteProduct,
+          getProduct,
+          addUser,
+          updateUser,
+          deleteUser,
+        }}
     >
       {children}
     </InventoryContext.Provider>

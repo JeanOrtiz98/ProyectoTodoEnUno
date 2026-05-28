@@ -5,9 +5,9 @@ import type { User } from '../context/InventoryContext';
 
 interface UserCardProps {
   user: User;
-  currentUserId?: string;
+  currentUserId?: number;
   onEdit: (user: User) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: number) => void;
   canManage: boolean;
 }
 

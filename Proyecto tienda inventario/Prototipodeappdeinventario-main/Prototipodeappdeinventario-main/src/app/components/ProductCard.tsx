@@ -5,7 +5,7 @@ import type { Product } from '../context/InventoryContext';
 
 interface ProductCardProps {
   product: Product;
-  onDelete: (id: string) => void;
+  onDelete: (id: number) => void;
 }
 
 export function ProductCard({ product, onDelete }: ProductCardProps) {

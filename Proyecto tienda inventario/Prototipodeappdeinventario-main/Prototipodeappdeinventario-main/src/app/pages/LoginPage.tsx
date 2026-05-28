@@ -7,6 +7,7 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Activity, Lock, User } from 'lucide-react';
+import { registerUser } from '../services/userService';
 
 export function LoginPage() {
   const [username, setUsername] = useState('');
@@ -15,6 +16,12 @@ export function LoginPage() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [isRegister, setIsRegister] = useState(false);
+  const [registerData, setRegisterData] = useState({
+    username: '',
+    email: '',
+    password: '',
+  });
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -22,7 +29,7 @@ export function LoginPage() {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -31,7 +38,11 @@ export function LoginPage() {
       return;
     }
 
-    const success = login(username, password);
+    const success = await login(
+        username,
+        password
+    );
+
     if (success) {
       navigate('/');
     } else {
@@ -40,10 +51,35 @@ export function LoginPage() {
   };
 
   const handleForgotPassword = () => {
+
     setShowForgotPassword(true);
+
     setTimeout(() => {
       setShowForgotPassword(false);
-    }, 3000);
+    }, 4000);
+  };
+
+  const handleRegister = async (
+      e: React.FormEvent
+  ) => {
+    e.preventDefault();
+    try {
+      await registerUser(registerData);
+      alert('Usuario registrado correctamente');
+
+      setIsRegister(false);
+      setRegisterData({
+        username: '',
+        email: '',
+        password: '',
+      });
+
+    } catch (error) {
+      console.error(error);
+      alert(
+          'Error registrando usuario'
+      );
+    }
   };
 
   return (
@@ -59,64 +95,207 @@ export function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="username">Usuario</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="Ingresa tu usuario"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+          {
+            !isRegister ? (
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Ingresa tu contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+                <>
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+                  <form
+                      onSubmit={handleSubmit}
+                      className="space-y-5"
+                  >
 
-            {showForgotPassword && (
-              <Alert>
-                <AlertDescription>
-                  Por favor, contacta al administrador para recuperar tu contraseña.
-                </AlertDescription>
-              </Alert>
-            )}
+                    <div className="space-y-2">
 
-            <Button type="submit" className="w-full">
-              Iniciar Sesión
-            </Button>
+                      <Label htmlFor="username">
+                        Usuario
+                      </Label>
 
-            <button
-              type="button"
-              onClick={handleForgotPassword}
-              className="w-full text-sm text-primary hover:underline"
-            >
-              ¿Olvidaste tu contraseña?
-            </button>
-          </form>
+                      <div className="relative">
 
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+
+                        <Input
+                            id="username"
+                            type="text"
+                            placeholder="Ingresa tu usuario"
+                            value={username}
+                            onChange={(e) =>
+                                setUsername(e.target.value)
+                            }
+                            className="pl-10"
+                        />
+
+                      </div>
+
+                    </div>
+
+                    <div className="space-y-2">
+
+                      <Label htmlFor="password">
+                        Contraseña
+                      </Label>
+
+                      <div className="relative">
+
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+
+                        <Input
+                            id="password"
+                            type="password"
+                            placeholder="Ingresa tu contraseña"
+                            value={password}
+                            onChange={(e) =>
+                                setPassword(e.target.value)
+                            }
+                            className="pl-10"
+                        />
+
+                      </div>
+
+                    </div>
+
+                    {error && (
+
+                        <Alert variant="destructive">
+                          <AlertDescription>
+                            {error}
+                          </AlertDescription>
+                        </Alert>
+                    )}
+
+                    {showForgotPassword && (
+                        <Alert>
+                          <AlertDescription>
+                            Para recuperar tu contraseña contacta a:
+                            <br/>
+                            <span className="font-medium">admin@sportstock.com</span>
+                          </AlertDescription>
+                        </Alert>
+                    )}
+
+                    <Button
+                        type="submit"
+                        className="w-full"
+                    >
+                      Iniciar Sesión
+                    </Button>
+
+                    <button
+                        type="button"
+                        onClick={handleForgotPassword}
+                        className="w-full text-sm text-primary hover:underline"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+
+                  </form>
+
+                  <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full mt-4"
+                      onClick={() =>
+                          setIsRegister(true)
+                      }
+                  >
+                    Crear cuenta
+                  </Button>
+
+                </>
+
+            ) : (
+
+                <>
+
+                  <form
+                      onSubmit={handleRegister}
+                      className="space-y-4"
+                  >
+
+                    <div className="space-y-2">
+
+                      <Label>
+                        Usuario
+                      </Label>
+
+                      <Input
+                          type="text"
+                          placeholder="Nuevo usuario"
+                          value={registerData.username}
+                          onChange={(e) =>
+                              setRegisterData({
+                                ...registerData,
+                                username: e.target.value
+                              })
+                          }
+                      />
+
+                    </div>
+
+                    <div className="space-y-2">
+
+                      <Label>
+                        Correo
+                      </Label>
+
+                      <Input
+                          type="email"
+                          placeholder="correo@gmail.com"
+                          value={registerData.email}
+                          onChange={(e) =>
+                              setRegisterData({
+                                ...registerData,
+                                email: e.target.value
+                              })
+                          }
+                      />
+
+                    </div>
+
+                    <div className="space-y-2">
+
+                      <Label>
+                        Contraseña
+                      </Label>
+
+                      <Input
+                          type="password"
+                          placeholder="********"
+                          value={registerData.password}
+                          onChange={(e) =>
+                              setRegisterData({
+                                ...registerData,
+                                password: e.target.value
+                              })
+                          }
+                      />
+
+                    </div>
+
+                    <Button
+                        type="submit"
+                        className="w-full"
+                    >
+                      Registrarse
+                    </Button>
+
+                  </form>
+
+                  <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full mt-4"
+                      onClick={() =>
+                          setIsRegister(false)
+                      }
+                  >
+                    Ya tengo cuenta
+                  </Button>
+
+                </>
+            )
+          }
           <div className="mt-6 pt-6 border-t border-border">
             <p className="text-xs text-muted-foreground text-center">
               Usuarios de prueba:

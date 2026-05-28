@@ -47,3 +47,23 @@ export const deleteUserApi = async (
         method: 'DELETE',
     });
 };
+
+export const registerUser = async (user: {
+    username: string;
+    email: string;
+    password: string;
+}) => {
+
+    const response = await fetch(
+        'http://localhost:8080/api/users/register',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(user),
+        }
+    );
+
+    return await response.json();
+};

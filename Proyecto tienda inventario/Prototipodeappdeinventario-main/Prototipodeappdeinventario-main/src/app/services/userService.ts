@@ -1,12 +1,8 @@
 const API_URL = 'http://localhost:8080/api/users';
-
 export const getUsers = async () => {
-
     const response = await fetch(API_URL);
-
     return await response.json();
 };
-
 export const createUser = async (user: any) => {
 
     const response = await fetch(API_URL, {
@@ -16,7 +12,6 @@ export const createUser = async (user: any) => {
         },
         body: JSON.stringify(user),
     });
-
     return await response.json();
 };
 
@@ -35,14 +30,10 @@ export const updateUserApi = async (
             body: JSON.stringify(user),
         }
     );
-
     return await response.json();
-};
+}
 
-export const deleteUserApi = async (
-    id: number
-) => {
-
+export const deleteUserApi = async (id: number) => {
     await fetch(`${API_URL}/${id}`, {
         method: 'DELETE',
     });
@@ -54,9 +45,7 @@ export const registerUser = async (user: {
     password: string;
 }) => {
 
-    const response = await fetch(
-        'http://localhost:8080/api/users/register',
-        {
+    const response = await fetch('http://localhost:8080/api/users/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -64,6 +53,5 @@ export const registerUser = async (user: {
             body: JSON.stringify(user),
         }
     );
-
     return await response.json();
 };

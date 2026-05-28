@@ -111,7 +111,9 @@ export function ProductFormPage() {
 
   const handleChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+
     // Limpiar error del campo al escribir
+
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }

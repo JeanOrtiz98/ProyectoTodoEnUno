@@ -27,6 +27,14 @@ public class UserController {
         return userService.createUser(user);
     }
 
+    @PostMapping("/register")
+    public User registerUser(@RequestBody User user) {
+
+        user.setRole("empleado");
+
+        return userService.createUser(user);
+    }
+
     @PutMapping("/{id}")
     public User updateUser(
             @PathVariable Long id,
